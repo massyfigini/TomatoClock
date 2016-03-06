@@ -92,6 +92,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Comune.vb" />
+    <Compile Include="Impostazioni.Designer.vb">
+      <DependentUpon>Impostazioni.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Impostazioni.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="TomatoTimer.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -122,6 +128,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Impostazioni.resx">
+      <DependentUpon>Impostazioni.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="TomatoTimer.resx">
       <DependentUpon>TomatoTimer.vb</DependentUpon>
     </EmbeddedResource>

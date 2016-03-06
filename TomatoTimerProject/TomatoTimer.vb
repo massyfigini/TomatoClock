@@ -19,18 +19,28 @@ Public Class TomatoTimer
     Dim controllo As Boolean = False
 
 
-    Private Sub IniziaPomodoro_Click() Handles IniziaPomodoro.Click
+    Private Sub TomatoTimer_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
+        Bt_Impostazioni_Click(Nothing, Nothing)
+    End Sub
 
-        controllo = True
-        Minuti = 24
-        Secondi = 60
-        IniziaPomodoro.Enabled = False
-        IniziaPomodoro.Visible = False
-        Interruzione.Visible = True
-        Interruzione.Enabled = True
-        Label_Pausa.Visible = False
-        Time_Label.Text = "25 : 00"
-        Pomodoro.Start()
+
+    Sub IniziaPomodoro_Click() Handles BT_IniziaPomodoro.Click
+
+        If controllo = False Then
+            controllo = True
+            Minuti = 24
+            Secondi = 60
+            BT_IniziaPomodoro.Text = "Interruzione"
+            Label_Pausa.Visible = False
+            Time_Label.Text = "25 : 00"
+            Pomodoro.Start()
+        Else
+            BT_IniziaPomodoro.Text = "Inizia Pomodoro"
+            Label_Pausa.Visible = False
+            Time_Label.Text = "25 : 00"
+            Pomodoro.Stop()
+            controllo = False
+        End If
 
     End Sub
 
@@ -90,10 +100,7 @@ Public Class TomatoTimer
                                         Else
                                             PomodoriLabel.Text = pomodori & " pomodori completati"
                                         End If
-                                        Interruzione.Visible = False
-                                        Interruzione.Enabled = False
-                                        IniziaPomodoro.Enabled = True
-                                        IniziaPomodoro.Visible = True
+                                        BT_IniziaPomodoro.Text = "Inizia Pomodoro"
                                         'fai partire i 5 minuti di pausa
                                         controllo = False
                                         Inizia_Pausa()
@@ -109,17 +116,14 @@ Public Class TomatoTimer
     End Sub
 
 
-    Private Sub Esci_Click(sender As System.Object, e As System.EventArgs) Handles Esci.Click
+    Private Sub Esci_Click(sender As System.Object, e As System.EventArgs) Handles Bt_Esci.Click
 
         Pomodoro.Stop()
         controllo = False
-        IniziaPomodoro.Enabled = True
-        IniziaPomodoro.Visible = True
-        Interruzione.Visible = False
-        Interruzione.Enabled = False
+        BT_IniziaPomodoro.Text = "Inizia Pomodoro"
         Label_Pausa.Visible = False
         Time_Label.Text = "25 : 00"
-        IniziaPomodoro.Enabled = True
+        BT_IniziaPomodoro.Enabled = True
         Dim result As Integer = MessageBox.Show("Sei sicuro di voler uscire?", "Attenzione", MessageBoxButtons.YesNo)
         If result = DialogResult.Yes Then
             End     'esce dal programma
@@ -131,12 +135,9 @@ Public Class TomatoTimer
     End Sub
 
 
-    Private Sub Interruzione_Click(sender As System.Object, e As System.EventArgs) Handles Interruzione.Click
+    Private Sub Interruzione_Click(sender As System.Object, e As System.EventArgs)
 
-        Interruzione.Visible = False
-        Interruzione.Enabled = False
-        IniziaPomodoro.Enabled = True
-        IniziaPomodoro.Visible = True
+        BT_IniziaPomodoro.Text = "Interruzione"
         Time_Label.Text = "25 : 00"
         Pomodoro.Stop()
         controllo = False
@@ -339,38 +340,69 @@ Public Class TomatoTimer
 
     End Sub
 
-    Private Sub CB_PrimoPiano_MouseDown(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles CB_PrimoPiano.MouseDown
-
-        posizione = New Point(-e.X, -e.Y)
-
-    End Sub
-
-    Private Sub CB_PrimoPiano_MouseMove(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles CB_PrimoPiano.MouseMove
-
-        If e.Button = MouseButtons.Left Then
-
-            Dim mouse_loc As Point = Control.MousePosition
-
-            mouse_loc.Offset(posizione.X, posizione.Y)
-
-            Me.Location = mouse_loc
-
-        End If
-
-    End Sub
 
 
-    '-------------------------------------------------------------------------------------------------------------------------------------
-    '-------------------------------------------------------- GESTISCE IL PRIMO PIANO ----------------------------------------------------
-    '-------------------------------------------------------------------------------------------------------------------------------------
+    '--------------------------------------------------------------------------------------
+    '               SALVA POMODORI IN DATATABLE ED IN CSV
+    '--------------------------------------------------------------------------------------
 
-    Private Sub CB_PrimoPiano_CheckedChanged(sender As System.Object, e As System.EventArgs) Handles CB_PrimoPiano.CheckedChanged
-        If CB_PrimoPiano.Checked Then
-            Me.TopMost = True
-        Else
-            Me.TopMost = False
-        End If
+    Sub GetTable()
+        ' Create new DataTable instance.
+        Dim table As New DataTable
+
+        ' Create four typed columns in the DataTable.
+        table.Columns.Add("Dosage", GetType(Integer))
+        table.Columns.Add("Drug", GetType(String))
+        table.Columns.Add("Patient", GetType(String))
+        table.Columns.Add("Date", GetType(DateTime))
+
+        ' Add five rows with those columns filled in the DataTable.
+        table.Rows.Add(25, "Indocin", "David", DateTime.Now)
+        table.Rows.Add(50, "Enebrel", "Sam", DateTime.Now)
+        table.Rows.Add(10, "Hydralazine", "Christoff", DateTime.Now)
+        table.Rows.Add(21, "Combivent", "Janet", DateTime.Now)
+        table.Rows.Add(100, "Dilantin", "Melanie", DateTime.Now)
+        'Return table
+
+        DataTable2CSV(table, "D:\prova.csv", ";")
 
     End Sub
+
+    Sub DataTable2CSV(ByVal table As DataTable, ByVal filename As String,
+    ByVal sepChar As String)
+        Dim writer As System.IO.StreamWriter
+        Try
+            writer = New System.IO.StreamWriter(filename)
+
+            ' first write a line with the columns name
+            Dim sep As String = ""
+            Dim builder As New System.Text.StringBuilder
+            For Each col As DataColumn In table.Columns
+                builder.Append(sep).Append(col.ColumnName)
+                sep = sepChar
+            Next
+            writer.WriteLine(builder.ToString())
+
+            ' then write all the rows
+            For Each row As DataRow In table.Rows
+                sep = ""
+                builder = New System.Text.StringBuilder
+
+                For Each col As DataColumn In table.Columns
+                    builder.Append(sep).Append(row(col.ColumnName))
+                    sep = sepChar
+                Next
+                writer.WriteLine(builder.ToString())
+            Next
+        Finally
+            MsgBox("Errore di esportazione! Controlla il percorso nelle impostazioni")
+        End Try
+    End Sub
+
+    Private Sub Bt_Impostazioni_Click(sender As System.Object, e As System.EventArgs) Handles Bt_Impostazioni.Click
+        Me.TopMost = False
+        Impostazioni.ShowDialog()
+    End Sub
+
 
 End Class
